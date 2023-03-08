@@ -60,6 +60,9 @@ public class VacationDaysService {
 
     public UsedDaysResponse getUsedDays(LocalDate from, LocalDate to) {
         try {
+            if (from.isAfter(to)) {
+                throw new RbtException(400, "invalid dates");
+            }
             var employee = getAuthenticatedEmployee();
             var usedDays = usedDaysRepository.findAllByDateFromAfterAndDateToBeforeAndEmployee(from, to, employee).stream().map(range -> new UsedDaysRange(
                     range.getDateFrom(),
@@ -77,13 +80,13 @@ public class VacationDaysService {
 
     public AddedUsedDaysResponse addUsedDays(LocalDate from, LocalDate to) {
         try {
+            if (from.isAfter(to)) {
+                throw new RbtException(400, "invalid dates");
+            }
             int currentYear = Year.now().getValue();
             var vacationStartYear = from.getYear();
             if ((currentYear - vacationStartYear) > 1 || (vacationStartYear - currentYear) > 1) {
                 throw new RbtException(400, "invalid start of vacation");
-            }
-            if (from.isAfter(to)) {
-                throw new RbtException(400, "invalid dates");
             }
             var employee = getAuthenticatedEmployee();
 
