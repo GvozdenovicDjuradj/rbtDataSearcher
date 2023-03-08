@@ -54,7 +54,9 @@ public class WebSecurityConfig {
                 .anyRequest().authenticated()
                 .and()
                 .httpBasic()
-                .authenticationEntryPoint(authenticationEntryPoint);
+                .authenticationEntryPoint(authenticationEntryPoint)
+                .and()
+                .csrf().disable();
         return http.build();
     }
 
