@@ -2,6 +2,7 @@ package com.rbt.searcher.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rbt.searcher.error.ApiErrorResponse;
+import com.rbt.searcher.error.RbtException;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -77,13 +78,21 @@ public class WebSecurityConfig {
 class MyBasicAuthenticationEntryPoint extends BasicAuthenticationEntryPoint {
 
     @Override
-     public void commence(
-             HttpServletRequest request, HttpServletResponse response, AuthenticationException authEx)
+    public void commence(
+            HttpServletRequest request, HttpServletResponse response, AuthenticationException authEx)
             throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
         ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.writeValue(response.getWriter(), new ApiErrorResponse(HttpServletResponse.SC_UNAUTHORIZED, LocalDateTime.now().toString(), authEx.getMessage()));
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+        if (authEx.getCause() instanceof RbtException cause) {
+            response.setStatus(cause.getCode());
+            objectMapper.writeValue(response.getWriter(), new ApiErrorResponse(cause.getCode(), LocalDateTime.now().toString(), authEx.getMessage()));
+        } else {
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            objectMapper.writeValue(response.getWriter(), new ApiErrorResponse(HttpServletResponse.SC_UNAUTHORIZED, LocalDateTime.now().toString(), authEx.getMessage()));
+        }
         response.getWriter().flush();
     }
 
